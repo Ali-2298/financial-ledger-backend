@@ -1,6 +1,6 @@
 Entity Relationship Diagram:
+![Uploading image.png…]()
 
-https://files.slack.com/files-pri/T03JBCX8WE7-F09QWHPU5S9/untitled_diagram__1_.jpg
 
 ```mermaid
 graph TD
