@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/transaction');
 
+// Index - Get all transactions
 router.get('/', async (req, res) => {
   try {
     const transactions = await Transaction.find().sort({ transactionDate: -1 });
@@ -12,6 +13,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Create - Add a new transaction
 router.post('/', async (req, res) => {
   try {
     const { type, category, amount, description, transactionDate } = req.body;
