@@ -16,7 +16,7 @@ const authCtrl = require('./controllers/auth');
 const usersCtrl = require('./controllers/users');
 const accountCtrl = require('./controllers/account');
 const transactionCtrl = require('./controllers/transaction');
-const budgetCtrl = require('./controllers/budget');
+const budgetCtrl = require('./controllers/Budget');
 
 // MiddleWare
 const verifyToken = require('./middleware/verify-token');
