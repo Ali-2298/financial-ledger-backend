@@ -16,7 +16,11 @@ const transactionSchema = new mongoose.Schema({
     transactionDate: {
       type: Date,
       required: true
-  }
+    },
+    owner: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: 'User', required: true 
+    }
 });
 
 module.exports = mongoose.model("Transaction", transactionSchema);
