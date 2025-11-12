@@ -76,3 +76,30 @@ router.put('/:transactionId', async (req, res) => {
     res.status(500).json({ error: 'Failed to update transaction' });
   }
 });
+
+// Delete - Delete a Transaction
+
+router.delete('/:transactionId', async (req, res) => {
+    try {
+        const transaction = await Transaction.findById(req.params.transactionId);
+        
+        if (!transaction) {
+            console.log("Transaction not found");
+            return res.status(404).json({ error: 'Transaction not found' });
+        }
+        
+        if (!transaction.owner.equals(req.user._id)) {
+            console.log("Permission denied - user does not own this transaction");
+            return res.status(403).json({ error: 'Permission denied' });
+        }
+        
+        console.log("Permission granted - deleting transaction");
+        
+        await transaction.deleteOne();
+        
+        res.json({ message: 'Transaction deleted successfully' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to delete transaction' });
+    }
+});
