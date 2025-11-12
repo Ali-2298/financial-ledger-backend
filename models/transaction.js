@@ -5,6 +5,9 @@ const transactionSchema = new mongoose.Schema({
       type: String,
       required: true
     },
+    category: {
+      type: String
+    },
     description: {
       type: String,
       required: true

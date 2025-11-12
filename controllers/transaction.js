@@ -27,7 +27,8 @@ router.post('/', async (req, res) => {
       category,
       amount,
       description,
-      transactionDate
+      transactionDate,
+      owner: req.user._id
     });
 
     const savedTransaction = await newTransaction.save();
@@ -44,7 +45,7 @@ module.exports = router;
 
 router.put('/:transactionId', async (req, res) => {
   try {
-    const { type, description, amount, transactionDate } = req.body;
+    const { type, category, description, amount, transactionDate } = req.body;
 
     const transaction = await Transaction.findById(req.params.transactionId);
 
@@ -58,11 +59,13 @@ router.put('/:transactionId', async (req, res) => {
       return res.status(403).json({ error: 'Permission denied' });
     }
 
-    console.log("Permission granted - updating the transaction");
+    if (transaction.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Permission denied' });
+    }
 
     const updatedTransaction = await Transaction.findByIdAndUpdate(
       req.params.transactionId,
-      { type, description, amount, transactionDate },
+      { type, category, description, amount, transactionDate },
       { new: true }
     );
 
