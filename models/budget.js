@@ -11,7 +11,11 @@ const BudgetSchema = new Schema({
 
   name: { type: String, required: true },
 
-  periodType: { type: String, enum: ['monthly', 'weekly', 'custom'], required: true },
+  periodType: { 
+    type: String, 
+    enum: ['monthly', 'weekly', 'custom'], 
+    required: true 
+  },
 
   startDate: { type: Date, required: true },
 
@@ -25,3 +29,4 @@ const BudgetSchema = new Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('Budget', BudgetSchema);
+
