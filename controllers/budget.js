@@ -7,7 +7,7 @@ const Transaction = require('../models/transaction');  // Add this
 router.get('/', async (req, res) => {
     console.log('GET /api/budgets hit!');
     try {
-        const budgets = await Budget.find({ userId: req.user._id });  // teh mistake i used owner and it should be user id 
+        const budgets = await Budget.find({ owner : req.user._id });  // teh mistake i used owner and it should be user id 
         res.json(budgets);
     } catch (err) {
         console.error(err);
@@ -19,13 +19,13 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     console.log('POST /api/budget hit!');
     console.log('Request body:', req.body);
-    console.log('User:', req.user);
+    console.log('owner:', req.user);
     
     try {
         const { name, periodType, startDate, endDate, currency, alertThresholdPercent, items } = req.body;  // Added items and alertThresholdPercent
         
         const newBudget = new Budget({
-            userId: req.user._id,  // Fixed: userId
+            owner : req.user._id,  // Fixed: userId
             name,
             periodType,
             startDate,
@@ -48,7 +48,7 @@ router.get('/:budgetId', async (req, res) => {
     try {
         const budget = await Budget.findOne({ 
             _id: req.params.budgetId, 
-            userId: req.user._id  
+            owner: req.user._id  
         });
         
         if (!budget) {
@@ -65,18 +65,18 @@ router.get('/:budgetId', async (req, res) => {
 // Update - Edit budget
 router.put('/:budgetId', async (req, res) => {
     try {
-        const { name, periodType, startDate, endDate, currency, alertThresholdPercent, items } = req.body;  
+        const { name, periodType, startDate, endDate, currency, alertThresholdPercent, items } = req.body;//that we will requet thes from req.body   
         
         const budget = await Budget.findById(req.params.budgetId); 
         
         if (!budget) {
             console.log("Budget not found");
-            return res.status(404).json({ error: 'Budget not found' });
+            return res.status(404).json({ error: 'Budget not found' });//if the users doesn't have the budget It will show for him 404(error)
         }
         
-        if (!budget.userId.equals(req.user._id)) {  
+        if (!budget.owner.equals(req.user._id)) {  
             console.log("Permission denied");
-            return res.status(403).json({ error: 'Permission denied' });
+            return res.status(403).json({ error: 'Permission denied' });//if the user deosn't owns it it will shows 403(thaty the permission is denied )
         }
         
         console.log("Permission granted - updating the budget");
@@ -105,7 +105,7 @@ router.delete('/:budgetId', async (req, res) => {
             return res.status(404).json({ error: 'Budget not found' });
         }
         
-        if (!budget.userId.equals(req.user._id)) {  
+        if (!budget.owner.equals(req.user._id)) {  
             console.log("Permission denied - user does not own this budget");
             return res.status(403).json({ error: 'Permission denied' });
         }
@@ -126,7 +126,7 @@ router.get('/:budgetId/report', async (req, res) => {
     try {
         const budget = await Budget.findOne({ 
             _id: req.params.budgetId, 
-            userId: req.user._id
+            owner: req.user._id
         });
         
         if (!budget) {
@@ -134,7 +134,7 @@ router.get('/:budgetId/report', async (req, res) => {
         }
         
         const transactions = await Transaction.find({
-            user: req.user._id,
+            owner: req.user._id,
             date: { $gte: budget.startDate, $lte: budget.endDate },
             isExcluded: { $ne: true },
             isRefund: { $ne: true },

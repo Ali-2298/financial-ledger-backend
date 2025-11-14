@@ -7,7 +7,7 @@ const BudgetItemSchema = new Schema({
 });
 
 const BudgetSchema = new Schema({
-  userId: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+ owner : { type: Schema.Types.ObjectId, ref: 'User', required: true },
 
   name: { type: String, required: true },
 
