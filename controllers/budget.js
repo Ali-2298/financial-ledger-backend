@@ -6,7 +6,7 @@ const Transaction = require('../models/transaction');
 // Get all budgets for the logged-in user
 router.get('/', async (req, res) => {
   try {
-    const budgets = await Budget.find({ userId: req.user._id });
+    const budgets = await Budget.find({ owner: req.user._id });
     res.json(budgets);
   } catch (err) {
     console.error(err);
@@ -19,7 +19,7 @@ router.post('/', async (req, res) => {
   try {
     const { name, periodType, startDate, endDate, currency, alertThresholdPercent, items } = req.body;
     const newBudget = new Budget({
-      userId: req.user._id,
+      owner: req.user._id,
       name,
       periodType,
       startDate,
