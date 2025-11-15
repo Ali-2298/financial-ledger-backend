@@ -6,10 +6,7 @@ const Account = require('../models/account')
 // Get All Transaction
 router.get('/', async (req, res) => {
   try {
-    const transactions = await Transaction.find({ owner: req.user._id })
-      .populate('account', 'accountName') 
-      .sort({ transactionDate: -1 });
-
+    const transactions = await Transaction.find().sort({ transactionDate: -1 });
     res.json(transactions);
   } catch (err) {
     console.error('Error fetching transactions:', err);
@@ -20,9 +17,9 @@ router.get('/', async (req, res) => {
 // Create New Transaction
 router.post('/', async (req, res) => {
   try {
-    const { type, category, amount, description, transactionDate, accountId } = req.body;
+    const { type, category, amount, description, transactionDate } = req.body;
 
-    if (!type || !category || !amount || !description || !transactionDate || !accountId) {
+    if (!type || !category || !amount || !description || !transactionDate) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -35,6 +32,7 @@ router.post('/', async (req, res) => {
       type,
       category,
       amount,
+      currency,
       description,
       transactionDate,
       account: accountId,
@@ -55,27 +53,21 @@ router.post('/', async (req, res) => {
 // Update Transaction
 router.put('/:transactionId', async (req, res) => {
   try {
-    const { type, category, amount, description, transactionDate, accountId } = req.body;
+    const { type, category, description, amount, transactionDate } = req.body;
 
     const transaction = await Transaction.findById(req.params.transactionId);
     if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
     if (!transaction.owner.equals(req.user._id)) return res.status(403).json({ error: 'Permission denied' });
 
-    if (!type || !category || !amount || !description || !transactionDate || !accountId) {
-      return res.status(400).json({ message: 'All fields are required' });
+    if (transaction.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ error: 'Permission denied' });
     }
 
-    const accountExists = await Account.findById(accountId);
-    if (!accountExists) {
-      return res.status(404).json({ message: 'Account not found' });
-    }
-
-    transaction.type = type;
-    transaction.category = category;
-    transaction.amount = amount;
-    transaction.description = description;
-    transaction.transactionDate = transactionDate;
-    transaction.account = accountId;
+    const updatedTransaction = await Transaction.findByIdAndUpdate(
+      req.params.transactionId,
+      { type, category, description, amount, transactionDate },
+      { new: true }
+    );
 
     const updatedTransaction = await transaction.save();
     await updatedTransaction.populate('account', 'accountName');
