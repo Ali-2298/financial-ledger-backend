@@ -1,44 +1,76 @@
 Entity Relationship Diagram:
-![Uploading image.png…]()
+put image here
 
 
 ```mermaid
 graph TD
-    A["📘 Financial Ledger Dashboard<br/>GET /ledger<br/><br/>User sees:<br/>• List of all ledger accounts<br/>• Account names & balances<br/>• Total debits/credits summary<br/>• Add New Transaction button<br/>• Search/filter options (by date, account, type)"]
+    %% Models
+    USER["👤 User<br/>Owns accounts, transactions, budgets"]
 
-    B["📄 Account Details Page<br/>GET /ledger/:accountId<br/><br/>User sees:<br/>• Account name & type<br/>• Transaction history (Date, Description, Debit, Credit, Balance)<br/>• Running total balance<br/>• Edit/Delete transaction options<br/>• Add Adjustment button"]
+    ACCOUNT["🏦 Account<br/>Fields:<br/>• accountName<br/>• accountType<br/>• balance<br/>• accountNumber<br/>• owner (User ref)"]
 
-    E["➕ Add New Transaction Form<br/>POST /transactions<br/><br/>Form fields:<br/>• Account (dropdown)<br/>• Date<br/>• Description<br/>• Debit (number, min: 0)<br/>• Credit (number, min: 0)<br/>• Save/Cancel buttons"]
+    TRANSACTION["💳 Transaction<br/>Fields:<br/>• type<br/>• category<br/>• description<br/>• amount<br/>• transactionDate<br/>• owner (User ref)<br/>• account (Account ref)"]
 
-    F["✏️ Edit Transaction Form<br/>PUT /transactions/:id<br/><br/>Pre-filled form:<br/>• Current account, date, and details<br/>• Editable debit/credit fields<br/>• Update/Delete/Cancel buttons"]
+    BUDGET["💰 Budget<br/>Fields:<br/>• description<br/>• transactionDate<br/>• balance<br/>• owner (User ref)<br/>• accountId (Account ref)"]
 
-    I["🗑️ Delete Confirmation<br/>DELETE /transactions/:id<br/><br/>User sees:<br/>• Confirmation message<br/>• Transaction summary<br/>• Confirm/Cancel buttons<br/>• Warning about data loss"]
+    %% User owns models
+    USER --> ACCOUNT
+    USER --> TRANSACTION
+    USER --> BUDGET
 
-    %% Main navigation flow
-    A -->|"Click account"| B
+    %% Account CRUD
+    ACC_LIST["📄 Account List (Read)<br/>GET /accounts"]
+    ACC_ADD["➕ Add Account (Create)<br/>POST /accounts"]
+    ACC_EDIT["✏️ Edit Account (Update)<br/>PUT /accounts/:id"]
+    ACC_DELETE["🗑️ Delete Account (Delete)<br/>DELETE /accounts/:id"]
 
-    %% Create actions
-    A -->|"Add New Transaction"| E
-    E -->|"Save successful"| A
-    E -->|"Cancel"| A
+    ACCOUNT --> ACC_LIST
+    ACC_LIST --> ACC_ADD
+    ACC_LIST --> ACC_EDIT
+    ACC_LIST --> ACC_DELETE
+    ACC_ADD --> ACC_LIST
+    ACC_EDIT --> ACC_LIST
+    ACC_DELETE --> ACC_LIST
 
-    %% Edit/Delete transaction actions
-    B -->|"Edit Transaction"| F
-    F -->|"Update successful"| B
-    F -->|"Cancel"| B
-    B -->|"Delete Transaction"| I
-    I -->|"Confirm delete"| A
-    I -->|"Cancel"| B
-    F -->|"Delete from edit"| I
+    %% Transaction CRUD
+    TRANS_LIST["📄 Transaction List (Read)<br/>GET /transactions<br/>Filtered by account"]
+    TRANS_ADD["➕ Add Transaction (Create)<br/>POST /transactions"]
+    TRANS_EDIT["✏️ Edit Transaction (Update)<br/>PUT /transactions/:id"]
+    TRANS_DELETE["🗑️ Delete Transaction (Delete)<br/>DELETE /transactions/:id"]
 
-    %% Back navigation
-    B -->|"Back to dashboard"| A
+    TRANSACTION --> TRANS_LIST
+    TRANS_LIST --> TRANS_ADD
+    TRANS_LIST --> TRANS_EDIT
+    TRANS_LIST --> TRANS_DELETE
+    TRANS_ADD --> TRANS_LIST
+    TRANS_EDIT --> TRANS_LIST
+    TRANS_DELETE --> TRANS_LIST
+
+    %% Budget CRUD
+    BUDGET_LIST["📄 Budget List (Read)<br/>GET /budgets<br/>Per account"]
+    BUDGET_ADD["➕ Add Budget (Create)<br/>POST /budgets"]
+    BUDGET_EDIT["✏️ Edit Budget (Update)<br/>PUT /budgets/:id"]
+    BUDGET_DELETE["🗑️ Delete Budget (Delete)<br/>DELETE /budgets/:id"]
+
+    BUDGET --> BUDGET_LIST
+    BUDGET_LIST --> BUDGET_ADD
+    BUDGET_LIST --> BUDGET_EDIT
+    BUDGET_LIST --> BUDGET_DELETE
+    BUDGET_ADD --> BUDGET_LIST
+    BUDGET_EDIT --> BUDGET_LIST
+    BUDGET_DELETE --> BUDGET_LIST
+
+    %% References
+    ACC_LIST -->|Transactions belong to account| TRANS_LIST
+    ACC_LIST -->|Budgets belong to account| BUDGET_LIST
 
     %% Styling
-    classDef primaryPage fill:#e8f5e8,stroke:#27ae60,stroke-width:3px
-    classDef formPage fill:#fff3cd,stroke:#ffc107,stroke-width:2px
-    classDef deletePage fill:#f8d7da,stroke:#dc3545,stroke-width:2px
+    classDef user fill:#ffe8d6,stroke:#ff7f50,stroke-width:3px
+    classDef account fill:#e8f5e8,stroke:#27ae60,stroke-width:2px
+    classDef transaction fill:#fff3cd,stroke:#ffc107,stroke-width:2px
+    classDef budget fill:#d0ebff,stroke:#1c7ed6,stroke-width:2px
 
-    class A,B primaryPage
-    class E,F formPage
-    class I deletePage
+    class USER user
+    class ACCOUNT,ACC_LIST,ACC_ADD,ACC_EDIT,ACC_DELETE account
+    class TRANSACTION,TRANS_LIST,TRANS_ADD,TRANS_EDIT,TRANS_DELETE transaction
+    class BUDGET,BUDGET_LIST,BUDGET_ADD,BUDGET_EDIT,BUDGET_DELETE budget
