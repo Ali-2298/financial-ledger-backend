@@ -7,7 +7,7 @@ const Account = require('../models/account')
 router.get('/', async (req, res) => {
   try {
     const transactions = await Transaction.find({ owner: req.user._id })
-      .populate('account', 'accountName') 
+      .populate('account', 'accountName')
       .sort({ transactionDate: -1 });
 
     res.json(transactions);
@@ -20,9 +20,9 @@ router.get('/', async (req, res) => {
 // Create New Transaction
 router.post('/', async (req, res) => {
   try {
-    const { type, category, amount, description, transactionDate, accountId } = req.body;
+    const { type, category, amount, currency, description, transactionDate, accountId } = req.body;
 
-    if (!type || !category || !amount || !description || !transactionDate || !accountId) {
+    if (!type || !category || !amount || !currency || !description || !transactionDate || !accountId) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -35,6 +35,7 @@ router.post('/', async (req, res) => {
       type,
       category,
       amount,
+      currency,
       description,
       transactionDate,
       account: accountId,
@@ -55,13 +56,13 @@ router.post('/', async (req, res) => {
 // Update Transaction
 router.put('/:transactionId', async (req, res) => {
   try {
-    const { type, category, amount, description, transactionDate, accountId } = req.body;
+    const { type, category, amount, currency, description, transactionDate, accountId } = req.body;
 
     const transaction = await Transaction.findById(req.params.transactionId);
     if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
     if (!transaction.owner.equals(req.user._id)) return res.status(403).json({ error: 'Permission denied' });
 
-    if (!type || !category || !amount || !description || !transactionDate || !accountId) {
+    if (!type || !category || !amount || !currency || !description || !transactionDate || !accountId) {
       return res.status(400).json({ message: 'All fields are required' });
     }
 
@@ -73,6 +74,7 @@ router.put('/:transactionId', async (req, res) => {
     transaction.type = type;
     transaction.category = category;
     transaction.amount = amount;
+    transaction.currency = currency;
     transaction.description = description;
     transaction.transactionDate = transactionDate;
     transaction.account = accountId;

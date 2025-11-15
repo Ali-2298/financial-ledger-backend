@@ -28,6 +28,10 @@ const transactionSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Account', 
       required: true
+    },
+    currency: {
+      type: String,
+      default: 'BHD'
     }
 });
 
