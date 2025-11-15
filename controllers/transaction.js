@@ -1,11 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const Transaction = require('../models/transaction');
+const Account = require('../models/account')
 
-// Index - Get all transactions
+// Get All Transaction
 router.get('/', async (req, res) => {
   try {
-    const transactions = await Transaction.find().sort({ transactionDate: -1 });
+    const transactions = await Transaction.find({ owner: req.user._id })
+      .populate('account', 'accountName')
+      .sort({ transactionDate: -1 });
+
     res.json(transactions);
   } catch (err) {
     console.error('Error fetching transactions:', err);
@@ -13,25 +17,35 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Create - Add a new transaction
+// Create New Transaction
 router.post('/', async (req, res) => {
   try {
-    const { type, category, amount, description, transactionDate } = req.body;
+    const { type, category, amount, currency, description, transactionDate, accountId } = req.body;
 
-    if (!type || !category || !amount || !description || !transactionDate) {
+    if (!type || !category || !amount || !currency || !description || !transactionDate || !accountId) {
       return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const accountExists = await Account.findById(accountId);
+    if (!accountExists) {
+      return res.status(404).json({ message: 'Account not found' });
     }
 
     const newTransaction = new Transaction({
       type,
       category,
       amount,
+      currency,
       description,
       transactionDate,
+      account: accountId,
       owner: req.user._id
     });
 
     const savedTransaction = await newTransaction.save();
+
+    await savedTransaction.populate('account', 'accountName');
+
     res.status(201).json(savedTransaction);
   } catch (err) {
     console.error('Error creating transaction:', err);
@@ -39,37 +53,35 @@ router.post('/', async (req, res) => {
   }
 });
 
-module.exports = router;
-
-// Update - Edit a transaction
-
+// Update Transaction
 router.put('/:transactionId', async (req, res) => {
   try {
-    const { type, category, description, amount, transactionDate } = req.body;
+    const { type, category, amount, currency, description, transactionDate, accountId } = req.body;
 
     const transaction = await Transaction.findById(req.params.transactionId);
+    if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+    if (!transaction.owner.equals(req.user._id)) return res.status(403).json({ error: 'Permission denied' });
 
-    if (!transaction) {
-      console.log("Transaction not found");
-      return res.status(404).json({ error: 'Transaction not found' });
+    if (!type || !category || !amount || !currency || !description || !transactionDate || !accountId) {
+      return res.status(400).json({ message: 'All fields are required' });
     }
 
-    if (!transaction.owner.equals(req.user._id)) {
-      console.log("Permission denied");
-      return res.status(403).json({ error: 'Permission denied' });
+    const accountExists = await Account.findById(accountId);
+    if (!accountExists) {
+      return res.status(404).json({ message: 'Account not found' });
     }
 
-    if (transaction.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ error: 'Permission denied' });
-    }
+    transaction.type = type;
+    transaction.category = category;
+    transaction.amount = amount;
+    transaction.currency = currency;
+    transaction.description = description;
+    transaction.transactionDate = transactionDate;
+    transaction.account = accountId;
 
-    const updatedTransaction = await Transaction.findByIdAndUpdate(
-      req.params.transactionId,
-      { type, category, description, amount, transactionDate },
-      { new: true }
-    );
+    const updatedTransaction = await transaction.save();
+    await updatedTransaction.populate('account', 'accountName');
 
-    console.log("Updated");
     res.json(updatedTransaction);
   } catch (err) {
     console.error(err);
@@ -77,29 +89,19 @@ router.put('/:transactionId', async (req, res) => {
   }
 });
 
-// Delete - Delete a Transaction
-
+// Delete a Transaction
 router.delete('/:transactionId', async (req, res) => {
-    try {
-        const transaction = await Transaction.findById(req.params.transactionId);
-        
-        if (!transaction) {
-            console.log("Transaction not found");
-            return res.status(404).json({ error: 'Transaction not found' });
-        }
-        
-        if (!transaction.owner.equals(req.user._id)) {
-            console.log("Permission denied - user does not own this transaction");
-            return res.status(403).json({ error: 'Permission denied' });
-        }
-        
-        console.log("Permission granted - deleting transaction");
-        
-        await transaction.deleteOne();
-        
-        res.json({ message: 'Transaction deleted successfully' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: 'Failed to delete transaction' });
-    }
+  try {
+    const transaction = await Transaction.findById(req.params.transactionId);
+    if (!transaction) return res.status(404).json({ error: 'Transaction not found' });
+    if (!transaction.owner.equals(req.user._id)) return res.status(403).json({ error: 'Permission denied' });
+
+    await transaction.deleteOne();
+    res.json({ message: 'Transaction deleted successfully' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to delete transaction' });
+  }
 });
+
+module.exports = router;
