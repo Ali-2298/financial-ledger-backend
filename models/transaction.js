@@ -23,6 +23,11 @@ const transactionSchema = new mongoose.Schema({
     owner: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: 'User', required: true 
+    },
+    account: { 
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Account', 
+      required: true
     }
 });
 
