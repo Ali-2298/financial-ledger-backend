@@ -40,8 +40,8 @@ router.post('/', async (req, res) => {
 router.get('/:budgetId', async (req, res) => {
   try {
     const budget = await Budget.findOne({
-      _id: req.params.budgetId, 
-      userId: req.user._id
+      _id: req.params.budgetId,
+      owner: req.user._id
     });
     if (!budget) {
       return res.status(404).json({ error: 'Budget not found' });
@@ -61,7 +61,7 @@ router.put('/:budgetId', async (req, res) => {
     const budget = await Budget.findById(req.params.budgetId);
     if (!budget) return res.status(404).json({ error: 'Budget not found' });
 
-    if (!budget.userId.equals(req.user._id)) {
+    if (!budget.owner.equals(req.user._id)) {
       return res.status(403).json({ error: 'Permission denied' });
     }
 
@@ -84,7 +84,7 @@ router.delete('/:budgetId', async (req, res) => {
     const budget = await Budget.findById(req.params.budgetId);
     if (!budget) return res.status(404).json({ error: 'Budget not found' });
 
-    if (!budget.userId.equals(req.user._id)) {
+    if (!budget.owner.equals(req.user._id)) {
       return res.status(403).json({ error: 'Permission denied' });
     }
 
@@ -101,7 +101,7 @@ router.get('/:budgetId/report', async (req, res) => {
   try {
     const budget = await Budget.findOne({
       _id: req.params.budgetId,
-      userId: req.user._id
+      owner: req.user._id
     });
     if (!budget) {
       return res.status(404).json({ error: 'Budget not found' });
@@ -149,3 +149,4 @@ router.get('/:budgetId/report', async (req, res) => {
 });
 
 module.exports = router;
+
