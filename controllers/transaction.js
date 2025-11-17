@@ -62,15 +62,13 @@ router.put('/:transactionId', async (req, res) => {
     if (transaction.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({ error: 'Permission denied' });
     }
-
-    const updatedTransaction = await Transaction.findByIdAndUpdate(
+const updatedTransaction = await Transaction.findByIdAndUpdate(
       req.params.transactionId,
       { type, category, description, amount, transactionDate },
       { new: true }
-    );
+    ).populate('account', 'accountName');
 
-    const updatedTransaction = await transaction.save();
-    await updatedTransaction.populate('account', 'accountName');
+    res.json(updatedTransaction);
 
     res.json(updatedTransaction);
   } catch (err) {
